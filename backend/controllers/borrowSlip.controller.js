@@ -270,3 +270,74 @@ exports.returnSlip = async (req, res) => {
     res.status(500).json({ success: false, message: "Lỗi trả sách: " + err.message });
   }
 };
+
+// Admin borrow - create slip for user (copy logic từ createSlip)
+exports.adminBorrowBook = async (req, res) => {
+  try {
+    const { bookId, cardNumber, daysToBorrow } = req.body;
+    console.log('🔵 adminBorrowBook called:', { bookId, cardNumber, daysToBorrow });
+
+    // Validate inputs
+    if (!bookId || !cardNumber || !daysToBorrow) {
+      return res.status(400).json({ success: false, message: "Thiếu: bookId, cardNumber, daysToBorrow" });
+    }
+
+    // 1. Find user by library card
+    const card = await LibraryCard.findOne({ cardNumber }).populate("user");
+    if (!card) {
+      return res.status(404).json({ success: false, message: "❌ Thẻ độc giả không tồn tại" });
+    }
+    const userId = card.user._id;
+    console.log('👤 User ID:', userId);
+
+    // 2. Check book exists and available
+    const book = await Book.findById(bookId);
+    if (!book || book.available <= 0) {
+      return res.status(400).json({ success: false, message: `📚 Sách "${book?.title || bookId}" hết hàng!` });
+    }
+    console.log('📚 Book found:', book.title);
+
+    // 3. Generate slip code (same as createSlip)
+    let slipCode = generateSlipCode();
+    while (await BorrowSlip.findOne({ slipCode })) {
+      slipCode = generateSlipCode();
+    }
+
+    // 4. Calculate due date
+    const days = daysToBorrow || 30;
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + days);
+    console.log('📅 Due date:', dueDate);
+
+    // 5. Create slip
+    const slip = new BorrowSlip({
+      slipCode,
+      user: userId,
+      books: [bookId],
+      dueDate,
+      status: 'borrowed'  // Admin confirm luôn, không cần pending
+    });
+
+    const savedSlip = await slip.save();
+    console.log('✅ Slip saved:', slip._id);
+
+    // 6. Decrement book.available
+    await Book.findByIdAndUpdate(bookId, { $inc: { available: -1 } });
+    console.log('✅ Book stock updated');
+
+    res.status(201).json({
+      success: true,
+      message: `✅ Tạo phiếu mượn ${slipCode} thành công!`,
+      slip: {
+        id: savedSlip._id,
+        slipCode: savedSlip.slipCode,
+        bookId: bookId,
+        dueDate: savedSlip.dueDate,
+        status: savedSlip.status
+      }
+    });
+  } catch (err) {
+    console.error('❌ Error in adminBorrowBook:', err.message);
+    res.status(500).json({ success: false, message: "Lỗi mượn sách: " + err.message });
+  }
+};

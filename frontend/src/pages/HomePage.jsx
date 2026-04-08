@@ -11,7 +11,7 @@ function HomePage() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [pagination, setPagination] = useState({ page: 1, limit: 5, total: 0, pages: 0 });
+  const [pagination, setPagination] = useState({ page: 1, limit: 25, total: 0, pages: 0 });
 
   // Get user info
   const user = JSON.parse(localStorage.getItem('user') || '{}');

@@ -2,8 +2,13 @@ import API from './axiosConfig';
 
 export const loanService = {
   // Lấy lịch sử mượn của user
-  getMyLoans: (status) => 
-    API.get('/loans/user/history', { params: { status } }),
+  getMyLoans: (status, paginationParams = {}) => {
+    const params = {};
+    if (status) params.status = status;
+    if (paginationParams.page) params.page = paginationParams.page;
+    if (paginationParams.limit) params.limit = paginationParams.limit;
+    return API.get('/loans/user/history', { params });
+  },
 
   // Lấy tất cả phiếu mượn (admin)
   getAllLoans: (params) => 

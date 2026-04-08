@@ -15,29 +15,38 @@ function BorrowHistoryPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    setPagination({ page: 1, limit: 10, total: 0, pages: 0 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
+
+  useEffect(() => {
     fetchSlips();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, pagination.page]);
+  }, [pagination.page, status]);
 
   const fetchSlips = async () => {
     try {
       setLoading(true);
-      const response = await borrowSlipService.getMySlips(status || undefined, {
+      const response = await borrowSlipService.getMySlips(status, {
         page: pagination.page,
         limit: pagination.limit,
       });
-      setSlips(response.data.slips || []);
-      if (response.data.pagination) {
-        setPagination({
+      
+      const slipsData = response.data?.slips || [];
+      setSlips(slipsData);
+      
+      if (response.data?.pagination) {
+        setPagination(prev => ({
+          ...prev,
           page: response.data.pagination.page || 1,
           limit: response.data.pagination.limit || 10,
           total: response.data.pagination.total || 0,
           pages: response.data.pagination.pages || 1,
-        });
+        }));
       }
       setError(null);
     } catch (err) {
-      console.error('Lỗi tải lịch sử mượn:', err);
+      console.error('Fetch slips error:', err);
       setError('Không thể tải lịch sử mượn. Vui lòng thử lại.');
     } finally {
       setLoading(false);
@@ -304,7 +313,6 @@ function BorrowHistoryPage() {
                 <div className="detail-books-list">
                   {selectedSlip.books?.map((book, index) => (
                     <div key={book._id} className="detail-book-item">
-                      <span className="detail-book-index">{index + 1}</span>
                       <div className="detail-book-info">
                         <div className="detail-book-title">{book.title}</div>
                         <div className="detail-book-author">{book.author}</div>

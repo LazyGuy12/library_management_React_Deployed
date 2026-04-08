@@ -13,6 +13,9 @@ router.get('/all', authJwt.verifyToken, authJwt.isAdmin, borrowSlipController.ge
 // User: Tạo phiếu mượn từ giỏ sách
 router.post('/', authJwt.verifyToken, borrowSlipController.createSlip);
 
+// Admin: Mượn sách cho user (tạo BorrowSlip)
+router.post('/admin/borrow', authJwt.verifyToken, authJwt.isAdmin, borrowSlipController.adminBorrowBook);
+
 // Admin: Xác nhận lấy sách
 router.put('/:id/pickup', authJwt.verifyToken, authJwt.isAdmin, borrowSlipController.pickupSlip);
 

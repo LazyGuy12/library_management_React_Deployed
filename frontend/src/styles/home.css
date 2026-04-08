@@ -76,7 +76,10 @@
   width: 100%;
   aspect-ratio: 2.5 / 3.5;
   overflow: hidden;
-  background: #e8e8e8;
+  background: #f9f9f9;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .book-image {

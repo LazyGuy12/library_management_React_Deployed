@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Navigation from '../components/Navigation';
 import bookService from '../services/bookService';
 import '../styles/admin.css';
@@ -12,11 +12,14 @@ function AdminBooksPage() {
   const [imagePreview, setImagePreview] = useState('');
   const [editingBookId, setEditingBookId] = useState(null);
   
+  // Ref for form scroll
+  const formRef = useRef(null);
+  
   // Manual borrow state
   const [showBorrowModal, setShowBorrowModal] = useState(false);
   const [selectedBookForBorrow, setSelectedBookForBorrow] = useState(null);
   const [borrowFormData, setBorrowFormData] = useState({
-    mssv: '',
+    cardNumber: '',
     returnDate: '',
   });
   const [borrowLoading, setBorrowLoading] = useState(false);
@@ -189,6 +192,13 @@ function AdminBooksPage() {
       setImagePreview(book.image);
     }
     setShowForm(true);
+    
+    // Auto scroll to form
+    setTimeout(() => {
+      if (formRef.current) {
+        formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
   const handleCancelEdit = () => {
@@ -254,11 +264,16 @@ function AdminBooksPage() {
 
     setBorrowLoading(true);
     try {
-      // Gọi API để tạo loan trực tiếp
+      // Calculate days to borrow from return date
+      const today = new Date();
+      const returnDateObj = new Date(borrowFormData.returnDate);
+      const daysToBorrow = Math.ceil((returnDateObj - today) / (1000 * 60 * 60 * 24));
+
+      // Gọi API để tạo phiếu mượn cho người dùng
       const response = await bookService.adminBorrowBook(
         selectedBookForBorrow._id,
         borrowFormData.cardNumber,
-        borrowFormData.returnDate
+        daysToBorrow
       );
 
       alert('✅ ' + (response.data.message || 'Tạo phiếu mượn thành công!'));
@@ -315,7 +330,7 @@ function AdminBooksPage() {
 
           {/* Add/Edit Book Form */}
           {showForm && (
-            <div className="admin-form-card">
+            <div className="admin-form-card" ref={formRef}>
               <h2>{editingBookId ? 'Chỉnh Sửa Sách' : 'Thêm Sách Mới'}</h2>
               <form onSubmit={handleAddBook}>
                 <div className="form-row">

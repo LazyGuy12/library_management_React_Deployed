@@ -34,8 +34,8 @@ export const bookService = {
   deleteBook: (id) => API.delete(`/books/${id}`),
 
   // Mượn sách trực tiếp (admin - cho độc giả)
-  adminBorrowBook: (bookId, cardNumber, returnDate) =>
-    API.post('/loans/admin/borrow', { bookId, cardNumber, returnDate }),
+  adminBorrowBook: (bookId, cardNumber, daysToBorrow) =>
+    API.post('/borrow-slips/admin/borrow', { bookId, cardNumber, daysToBorrow }),
 };
 
 export default bookService;
